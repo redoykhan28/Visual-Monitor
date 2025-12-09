@@ -5,16 +5,25 @@ import { eq } from 'drizzle-orm';
 import DiffViewer from '@/components/DiffViewer';
 import CheckButton from '@/components/CheckButton';
 
-// 1. Update the type definition to use Promise
-export default async function WebsiteDetails({ params }: { params: Promise<{ id: string }> }) {
+// 1. Update the type: params is now a Promise
+type Props = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function WebsiteDetails({ params }: Props) {
   
-  // 2. Await the params before using them (Next.js 15 requirement)
+  // 2. AWAIT the params to get the ID (This fixes the crash)
   const resolvedParams = await params;
   const websiteId = parseInt(resolvedParams.id);
 
-  // The rest of your code stays the same...
-  const website = await db.query.websites.findFirst({ where: eq(websites.id, websiteId) });
-  const sitePages = await db.query.pages.findMany({ where: eq(pages.websiteId, websiteId) });
+  // 3. Fetch Data
+  const website = await db.query.websites.findFirst({ 
+    where: eq(websites.id, websiteId) 
+  });
+  
+  const sitePages = await db.query.pages.findMany({ 
+    where: eq(pages.websiteId, websiteId) 
+  });
 
   return (
     <main className="p-10">
@@ -50,16 +59,20 @@ export default async function WebsiteDetails({ params }: { params: Promise<{ id:
                     {page.baselineUrl && (
                         <div className="mt-4">
                             <p className="text-sm text-gray-400 mb-2">Visual Comparison:</p>
-                            {/* In a real app, query the latest snapshot for the 'current' image. 
-                                For now, we reuse baseline to prevent errors if no check run yet. */}
+                            {/* Note: In a real app, you'd fetch the 'current' snapshot URL too. 
+                                For now, we use baselineUrl for both just to visualize the layout. */}
                             <DiffViewer 
                                 baseline={page.baselineUrl} 
-                                current={page.baselineUrl} // You would fetch the latest snapshot URL here
+                                current={page.baselineUrl} 
                             />
                         </div>
                     )}
                 </div>
             ))}
+            
+            {sitePages.length === 0 && (
+                <p className="text-gray-500 italic">No pages monitored yet. Add one above!</p>
+            )}
         </div>
     </main>
   );

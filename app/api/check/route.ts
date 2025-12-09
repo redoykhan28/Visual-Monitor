@@ -14,8 +14,11 @@ export async function POST(req: Request) {
   try {
     // 1. Launch Browser
     const browser = await chromium.launch();
-    const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-    const page = await context.newPage();
+// 👇 UPDATED CONTEXT: Added User Agent to look like real Chrome
+    const context = await browser.newContext({ 
+        viewport: { width: 1440, height: 1080 },
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    });    const page = await context.newPage();
     
     // 2. Go to URL & Snapshot
     // We wait for 'networkidle' to ensure images/fonts are loaded
